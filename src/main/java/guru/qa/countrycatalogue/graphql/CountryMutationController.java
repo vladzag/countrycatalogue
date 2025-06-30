@@ -17,7 +17,7 @@ public class CountryMutationController {
     }
 
     @MutationMapping
-    public CountryGql addCountry(@Argument CountryInputGql input) {
+    public CountryGql addCountry(@Argument InputCountryGql input) {
         return countryService.addGqlCountry(input);
     }
 

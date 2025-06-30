@@ -1,6 +1,6 @@
 package guru.qa.countrycatalogue.graphql;
 
-public record CountryInputGql(
+public record InputCountryGql(
         String name,
         String code
 ) {

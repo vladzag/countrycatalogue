@@ -1,7 +1,7 @@
 package guru.qa.countrycatalogue.service;
 
 import guru.qa.countrycatalogue.graphql.CountryGql;
-import guru.qa.countrycatalogue.graphql.CountryInputGql;
+import guru.qa.countrycatalogue.graphql.InputCountryGql;
 import guru.qa.countrycatalogue.model.CountryJson;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,5 +21,5 @@ public interface CountryService {
 
     Page<CountryGql> getAllGql(Pageable pageable);
 
-    CountryGql addGqlCountry(CountryInputGql input);
+    CountryGql addGqlCountry(InputCountryGql input);
 }

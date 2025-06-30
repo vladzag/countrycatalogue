@@ -7,7 +7,7 @@ import guru.qa.countrycatalogue.data.CountryEntity;
 import guru.qa.countrycatalogue.data.CountryRepository;
 import guru.qa.countrycatalogue.exception.CountryNotFoundException;
 import guru.qa.countrycatalogue.graphql.CountryGql;
-import guru.qa.countrycatalogue.graphql.CountryInputGql;
+import guru.qa.countrycatalogue.graphql.InputCountryGql;
 import guru.qa.countrycatalogue.model.CountryJson;
 import jakarta.annotation.Nonnull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +99,7 @@ public class CountryDbService implements CountryService {
     @Override
     public Page<CountryGql> getAllGql(Pageable pageable) {
         return countryRepository.findAll(pageable)
-                .map(ce -> new CountryGql(
+                .map(ce -> CountryGql.instance(
                         ce.getId(),
                         ce.getName(),
                         ce.getCode()
@@ -107,16 +107,13 @@ public class CountryDbService implements CountryService {
     }
 
     @Override
-    public CountryGql addGqlCountry(CountryInputGql input) {
+    public CountryGql addGqlCountry(InputCountryGql input) {
         CountryEntity ce = new CountryEntity();
         ce.setName(input.name());
         ce.setCode(input.code());
 
         CountryEntity saved = countryRepository.save(ce);
-
-        return new CountryGql(
-                saved.getId(),
-                saved.getName(),
-                saved.getCode());
+        return
+                CountryGql.instance(saved.getId(), saved.getName(), saved.getCode());
     }
 }
