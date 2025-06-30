@@ -5,11 +5,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import guru.qa.countrycatalogue.data.CountryEntity;
 import guru.qa.countrycatalogue.data.CountryRepository;
-import guru.qa.countrycatalogue.domain.Country;
 import guru.qa.countrycatalogue.exception.CountryNotFoundException;
+import guru.qa.countrycatalogue.graphql.CountryGql;
+import guru.qa.countrycatalogue.graphql.InputCountryGql;
+import guru.qa.countrycatalogue.model.CountryJson;
 import jakarta.annotation.Nonnull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+
 import java.util.List;
 
 @Component
@@ -22,22 +27,22 @@ public class CountryDbService implements CountryService {
     }
 
     @Override
-    public @Nonnull Country addCountry(Country country) {
+    public @Nonnull CountryJson addCountry(CountryJson country) {
         CountryEntity ce = new CountryEntity();
         ce.setName(country.name());
         ce.setCode(country.code());
 
         CountryEntity createdCountry = countryRepository.save(ce);
-        return Country.fromEntity(createdCountry);
+        return CountryJson.fromEntity(createdCountry);
     }
 
     @Override
-    public @Nonnull Country updateCountry(Country country) {
+    public @Nonnull CountryJson updateCountry(CountryJson country) {
         return countryRepository.findByName(country.name()).map(
                 countryEntity -> {
                     countryEntity.setName(country.name());
                     countryEntity.setCode(country.code());
-                    return Country.fromEntity(countryRepository.save(countryEntity));
+                    return CountryJson.fromEntity(countryRepository.save(countryEntity));
                 }
         ).orElseThrow(() -> new CountryNotFoundException(
                         "Can't find country with given name" + country.name()
@@ -46,7 +51,7 @@ public class CountryDbService implements CountryService {
     }
 
     @Override
-    public @Nonnull Country updateCountryName(String countryCode, String jsonName) {
+    public @Nonnull CountryJson updateCountryName(String countryCode, String jsonName) {
         final String countryName;
         try {
             JsonNode jsonNode = new ObjectMapper().readTree(jsonName);
@@ -57,7 +62,7 @@ public class CountryDbService implements CountryService {
         return countryRepository.findByCode(countryCode).map(
                 countryEntity -> {
                     countryEntity.setName(countryName);
-                    return Country.fromEntity(countryRepository.save(countryEntity));
+                    return CountryJson.fromEntity(countryRepository.save(countryEntity));
                 }
         ).orElseThrow(() -> new CountryNotFoundException(
                         "Can't find country by given country code " + countryCode
@@ -66,9 +71,49 @@ public class CountryDbService implements CountryService {
     }
 
     @Override
-    public @Nonnull List<Country> getAll() {
+    public @Nonnull List<CountryJson> getAll() {
         return countryRepository.findAll()
                 .stream()
-                .map(Country::fromEntity)
+                .map(CountryJson::fromEntity)
                 .toList();
-    }}
+    }
+
+    @Override
+    public CountryGql updateCountryNameGql(String countryCode, String countryName) {
+        return countryRepository.findByCode(countryCode).map(
+                ce -> {
+                    ce.setName(countryName);
+                    CountryEntity saved = countryRepository.save(ce);
+                    return new CountryGql(
+                            saved.getId(),
+                            saved.getName(),
+                            saved.getCode()
+                    );
+                }
+        ).orElseThrow(() -> new CountryNotFoundException(
+                        "Can't find country by given country code " + countryCode
+                )
+        );
+    }
+
+    @Override
+    public Page<CountryGql> getAllGql(Pageable pageable) {
+        return countryRepository.findAll(pageable)
+                .map(ce -> CountryGql.instance(
+                        ce.getId(),
+                        ce.getName(),
+                        ce.getCode()
+                ));
+    }
+
+    @Override
+    public CountryGql addGqlCountry(InputCountryGql input) {
+        CountryEntity ce = new CountryEntity();
+        ce.setName(input.name());
+        ce.setCode(input.code());
+
+        CountryEntity saved = countryRepository.save(ce);
+        return
+                CountryGql.instance(saved.getId(), saved.getName(), saved.getCode());
+    }
+}
