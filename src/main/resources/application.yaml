@@ -40,3 +40,6 @@ jpa:
 
 server:
   port: 8800
+
+  countrycatalog:
+    base-uri: 'http://127.0.0.1:8800'
